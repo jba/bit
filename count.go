@@ -1,7 +1,7 @@
 package bit
 
 
-func CountOnes(n uint64) int {
+func CountOnes64(n uint64) int {
 	// Bit population count, see
 	// http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
 	// This is faster than table lookup:

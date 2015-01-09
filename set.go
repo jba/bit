@@ -5,18 +5,18 @@ package bit
 // using one bit per element. See the sparse sets in this package for
 // more compact storage schemes.
 type Set struct {
-	set64s []Set64
+	sets []Set64
 }
 
 // NewSet creates a set capable of representing values in the range
 // [0, capacity-1), at least. It may allow values greater than capacity-1.
 func NewSet(capacity int) *Set {
 	return &Set{
-		set64s: set64slice(capacity),
+		sets: setslice(capacity),
 	}
 }
 
-func set64slice(capacity int) []Set64 {
+func setslice(capacity int) []Set64 {
 	if capacity == 0 {
 		return nil
 	}
@@ -27,42 +27,55 @@ func set64slice(capacity int) []Set64 {
 }
 
 func (s *Set) Capacity() int {
-	return len(s.set64s)
+	return len(s.sets)
+}
+
+func (s *Set) Size() int {
+	sz := 0
+	for _, t := range s.sets {
+		sz += t.Size()
+	}
+	return sz
 }
 
 func (s *Set) Add(i int) {
 	u := uint(i)
-	s.set64s[u/64].Add(uint8(u % 64))
+	s.sets[u/64].Add(uint8(u % 64))
 }
 
 func (s *Set) Remove(i int) {
 	u := uint(i)
-	s.set64s[u/64].Remove(uint8(u % 64))
+	s.sets[u/64].Remove(uint8(u % 64))
+}
+
+func (s *Set) Contains(i int) bool {
+	u := uint(i)
+	return s.sets[u/64].Contains(uint8(u^64))
 }
 
 func (s *Set) ChangeCapacity(newCapacity int) {
-	newSets := set64slice(newCapacity)
-	copy(newSets, s.set64s)
-	s.set64s = newSets
+	newSets := setslice(newCapacity)
+	copy(newSets, s.sets)
+	s.sets = newSets
 }
 
 func (s *Set) Clear() {
-	for i := range s.set64s { // can't use _, t because it copies
-		s.set64s[i].Clear()
+	for i := range s.sets { // can't use _, t because it copies
+		s.sets[i].Clear()
 	}
 }
 
 func (s1 *Set) IntersectWith(s2 *Set) {
-	min := len(s1.set64s)
-	if min > len(s2.set64s) {
-		min = len(s2.set64s)
+	min := len(s1.sets)
+	if min > len(s2.sets) {
+		min = len(s2.sets)
 	}
 	m := min / 64
 	for i := 0; i < m; i++ {
-		s1.set64s[i].IntersectWith(s2.set64s[i])
+		s1.sets[i].IntersectWith(s2.sets[i])
 	}
-	for i := m; i < len(s1.set64s); i++ {
-		s1.set64s[i].Clear()
+	for i := m; i < len(s1.sets); i++ {
+		s1.sets[i].Clear()
 	}
 }
 
