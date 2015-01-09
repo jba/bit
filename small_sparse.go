@@ -4,6 +4,25 @@ type SmallSparseSet struct {
 	root *node // compact radix tree 3 levels deep.
 }
 
+func (s *SmallSparseSet) Add(n uint32) {
+	s.root = s.root.add(n)
+}
+
+func (s *SmallSparseSet) Remove(n uint32) {
+	s.root = s.root.remove(n)
+}
+
+func (s *SmallSparseSet) Contains(n uint32) bool {
+	return s.root.contains(n)
+}
+
+func (s *SmallSparseSet) Empty() bool {
+	return s.root == nil
+}
+
+
+
+
 func (b *SmallSparseSet) Contains(n uint32) bool {
 	if b.root == nil {
 		return false
@@ -26,22 +45,18 @@ func (b *SmallSparseSet) Contains(n uint32) bool {
 	return a3.set.Contains(uint8(n))
 }
 
-func (b *SmallSparseSet) Empty() bool {
-	return b.root == nil
-}
-
 ////////////////////////////////////////////////////////////////
 
 type node struct {
-	set Bitset8
-	items []item
 	shift int // how many bits to shift pos
+	set Set256
+	items []item
 }
 
 type item struct {
 	pos uint8					// the index in the full 256-element array
 	node *node
-	set *Bitset8
+	set *Set256
 }
 
 
