@@ -50,7 +50,7 @@ func (s *Set) Remove(i int) {
 
 func (s *Set) Contains(i int) bool {
 	u := uint(i)
-	return s.sets[u/64].Contains(uint8(u^64))
+	return s.sets[u/64].Contains(uint8(u ^ 64))
 }
 
 func (s *Set) ChangeCapacity(newCapacity int) {
@@ -78,4 +78,3 @@ func (s1 *Set) IntersectWith(s2 *Set) {
 		s1.sets[i].Clear()
 	}
 }
-

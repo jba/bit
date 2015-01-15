@@ -9,7 +9,7 @@ type SparseSet struct {
 
 func (s *SparseSet) Add(n uint64) {
 	if s.root == nil {
-		s.root = &node{shift: 64-8}
+		s.root = &node{shift: 64 - 8}
 	}
 	s.root.add(n)
 }
@@ -51,4 +51,11 @@ func (s *SparseSet) MemSize() uint64 {
 
 func memSize(x interface{}) uint64 {
 	return uint64(reflect.TypeOf(x).Size())
+}
+
+func (s *SparseSet) Elements(a []uint64, start uint64) int {
+	if s.root == nil {
+		return 0
+	}
+	return s.root.elements(a, start, 0)
 }

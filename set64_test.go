@@ -71,7 +71,7 @@ func TestElements64(t *testing.T) {
 	for _, test := range []struct {
 		n     int
 		start uint64
-		high uint64
+		high  uint64
 		want  []uint64
 	}{
 		{0, 0, 0, []uint64{}},
@@ -87,12 +87,13 @@ func TestElements64(t *testing.T) {
 		{3, 0, 0, []uint64{3, 17, 63}},
 		{3, 10, 0, []uint64{17, 63}},
 		{3, 99, 0, []uint64{}},
-		{3, 10, 64, []uint64{64+17, 64+63}},
+		{3, 10, 64, []uint64{64 + 17, 64 + 63}},
+		{3, 0, 256, []uint64{256 + 3, 256 + 17, 256 + 63}},
 	} {
 		n := s.Elements64(a[:test.n], uint8(test.start), test.high)
 		got := a[:n]
 		if !reflect.DeepEqual(got, test.want) {
-			t.Errorf("%+v: got %v, want %v", test, got, test.want)
+			t.Errorf("%+v: got %v", test, got)
 		}
 	}
 }
@@ -136,4 +137,3 @@ func naiveElementsUint8(s interface {
 	}
 	return els
 }
-

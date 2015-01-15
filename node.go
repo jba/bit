@@ -1,7 +1,5 @@
 package bit
 
-//import "fmt"
-
 // A node is a compact radix tree element.
 // It behaves like a 256-element array of subnodes, indexed by
 // one byte of the element. In fact, only the non-empty
@@ -9,13 +7,13 @@ package bit
 // and subnodes slice contains the non-empty subnodes in order.
 type node struct {
 	shift    uint // how many bits to shift elements
-	bitset   Set256 
+	bitset   Set256
 	subnodes []subnode // if shift > 0
 }
 
 type subnode struct {
 	index uint8 // the index in the full 256-element array
-	sub subber
+	sub   subber
 }
 
 type subber interface {
@@ -25,13 +23,13 @@ type subber interface {
 	elements(a []uint64, start, high uint64) int
 	size() int
 	memSize() uint64
-}	
+}
 
 func (n *node) newSubber() subber {
 	if n.shift == 8 {
 		return &Set256{}
 	} else {
-		return &node{shift: n.shift-8}
+		return &node{shift: n.shift - 8}
 	}
 }
 
@@ -55,8 +53,6 @@ func (n *node) add(e uint64) {
 	}
 	sub.add(e)
 }
-
-		
 
 func (n *node) remove(e uint64) (empty bool) {
 	// assert node is not empty
@@ -104,18 +100,21 @@ func (n *node) memSize() uint64 {
 	}
 	return sz
 }
-	
-	
 
 func (n *node) elements(a []uint64, start, high uint64) int {
+	hi := func(i int) uint64 {
+		return high | (uint64(n.subnodes[i].index) << n.shift)
+	}
+
 	var total int
 	si := uint8(start >> n.shift)
 	p, found := n.bitset.Position(si)
 	if found {
-		total = n.subnodes[p].sub.elements(a, start, uint64(n.subnodes[p].index) << n.shift)
+		total = n.subnodes[p].sub.elements(a, start, hi(p))
+		p++
 	}
-	for i := p+1; i < len(n.subnodes); i++ {
-		total += n.subnodes[i].sub.elements(a[total:], 0, uint64(n.subnodes[i].index) << n.shift)
+	for i := p; i < len(n.subnodes); i++ {
+		total += n.subnodes[i].sub.elements(a[total:], 0, hi(i))
 	}
 	return total
 }

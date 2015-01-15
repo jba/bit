@@ -91,7 +91,7 @@ func (s *Set256) Elements(a []uint8, start uint8) int {
 		return 0
 	}
 	si := start / 64
-	n := elements(s.sets[si], a, start % 64, si * 64)
+	n := elements(s.sets[si], a, start%64, si*64)
 	for i := si + 1; i < 4; i++ {
 		n += elements(s.sets[i], a[n:], 0, i*64)
 	}
@@ -111,9 +111,9 @@ func (s *Set256) Elements64(a []uint64, start uint8, high uint64) int {
 		return 0
 	}
 	si := start / 64
-	n := s.sets[si].Elements64(a, start % 64, uint64(si * 64))
+	n := s.sets[si].Elements64(a, start%64, high|uint64(si*64))
 	for i := si + 1; i < 4; i++ {
-		n += s.sets[i].Elements64(a[n:], 0, uint64(i*64))
+		n += s.sets[i].Elements64(a[n:], 0, high|uint64(i*64))
 	}
 	return n
 }
@@ -126,24 +126,23 @@ func (s Set256) String() string {
 	}
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "{%d", a[0])
-	for  _, e := range a[1:n] {
+	for _, e := range a[1:n] {
 		fmt.Fprintf(&buf, ", %d", e)
 	}
 	fmt.Fprint(&buf, "}")
 	return buf.String()
 }
-	
 
 // For subber, used in node:
 
 func (s *Set256) add(e uint64) { s.Add(uint8(e)) }
 
-func (s *Set256) remove(e uint64)  bool { 
+func (s *Set256) remove(e uint64) bool {
 	s.Remove(uint8(e))
 	return s.Empty()
 }
 
-func (s *Set256) contains(e uint64)  bool {
+func (s *Set256) contains(e uint64) bool {
 	return s.Contains(uint8(e))
 }
 
@@ -154,4 +153,3 @@ func (s *Set256) memSize() uint64 { return memSize(*s) }
 func (s *Set256) elements(a []uint64, start, high uint64) int {
 	return s.Elements64(a, uint8(start), high)
 }
-
