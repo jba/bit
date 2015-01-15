@@ -147,6 +147,10 @@ func (s *Set256) contains(e uint64)  bool {
 	return s.Contains(uint8(e))
 }
 
+func (s *Set256) size() int { return s.Size() }
+
+func (s *Set256) memSize() uint64 { return memSize(*s) }
+
 func (s *Set256) elements(a []uint64, start, high uint64) int {
 	return s.Elements64(a, uint8(start), high)
 }

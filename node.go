@@ -1,5 +1,6 @@
 package bit
 
+//import "fmt"
 
 // A node is a compact radix tree element.
 // It behaves like a 256-element array of subnodes, indexed by
@@ -22,10 +23,12 @@ type subber interface {
 	remove(uint64) bool // return true if empty
 	contains(uint64) bool
 	elements(a []uint64, start, high uint64) int
+	size() int
+	memSize() uint64
 }	
 
 func (n *node) newSubber() subber {
-	if n.shift == 0 {
+	if n.shift == 8 {
 		return &Set256{}
 	} else {
 		return &node{shift: n.shift-8}
@@ -48,9 +51,12 @@ func (n *node) add(e uint64) {
 		newsub[pos] = subnode{index: index, sub: sub}
 		copy(newsub[pos+1:], n.subnodes[pos:])
 		n.subnodes = newsub
+		//fmt.Printf("node shift %d: grew to %d\n", n.shift, len(n.subnodes))
 	}
 	sub.add(e)
 }
+
+		
 
 func (n *node) remove(e uint64) (empty bool) {
 	// assert node is not empty
@@ -81,6 +87,25 @@ func (n *node) contains(e uint64) bool {
 	}
 	return n.subnodes[p].sub.contains(e)
 }
+
+func (n *node) size() int {
+	t := 0
+	for _, s := range n.subnodes {
+		t += s.sub.size()
+	}
+	return t
+}
+
+func (n *node) memSize() uint64 {
+	sz := memSize(*n)
+	for _, s := range n.subnodes {
+		sz += memSize(s)
+		sz += s.sub.memSize()
+	}
+	return sz
+}
+	
+	
 
 func (n *node) elements(a []uint64, start, high uint64) int {
 	var total int
