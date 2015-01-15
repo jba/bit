@@ -1,36 +1,45 @@
 package bit
 
+import (
+	"bytes"
+	"fmt"
+)
+
 // A Set256 represents a set of values in the range [0, 256)
 // more efficiently than Set of capacity 256.
 type Set256 struct {
 	sets [4]Set64
 }
 
-func (b *Set256) Add(n uint8) {
-	b.sets[n/64].Add(n % 64)
+func (s *Set256) Add(n uint8) {
+	s.sets[n/64].Add(n % 64)
 }
 
-func (b *Set256) Remove(n uint8) {
-	b.sets[n/64].Remove(n % 64)
+func (s *Set256) Remove(n uint8) {
+	s.sets[n/64].Remove(n % 64)
 }
 
-func (b *Set256) Contains(n uint8) bool {
-	return b.sets[n/64].Contains(n % 64)
+func (s *Set256) Contains(n uint8) bool {
+	return s.sets[n/64].Contains(n % 64)
 }
 
-func (b *Set256) Empty() bool {
-	return b.sets[0].Empty() && b.sets[1].Empty() && b.sets[2].Empty() && b.sets[3].Empty()
+func (s *Set256) Empty() bool {
+	return s.sets[0].Empty() && s.sets[1].Empty() && s.sets[2].Empty() && s.sets[3].Empty()
 }
 
-func (b *Set256) Clear() {
-	b.sets[0].Clear()
-	b.sets[1].Clear()
-	b.sets[2].Clear()
-	b.sets[3].Clear()
+func (s *Set256) Clear() {
+	s.sets[0].Clear()
+	s.sets[1].Clear()
+	s.sets[2].Clear()
+	s.sets[3].Clear()
 }
 
-func (b *Set256) Size() int {
-	return b.sets[0].Size() + b.sets[1].Size() + b.sets[2].Size() + b.sets[3].Size()
+func (s *Set256) Size() int {
+	return s.sets[0].Size() + s.sets[1].Size() + s.sets[2].Size() + s.sets[3].Size()
+}
+
+func (Set256) Capacity() int {
+	return 256
 }
 
 // Position returns the 0-based position of n in the set. If
@@ -82,7 +91,7 @@ func (s *Set256) Elements(a []uint8, start uint8) int {
 		return 0
 	}
 	si := start / 64
-	n := elements(s.sets[si], a, start %64, si * 64)
+	n := elements(s.sets[si], a, start % 64, si * 64)
 	for i := si + 1; i < 4; i++ {
 		n += elements(s.sets[i], a[n:], 0, i*64)
 	}
@@ -97,35 +106,48 @@ func elements(s Set64, a []uint8, start, high uint8) int {
 	return n
 }
 
-
-
-// func (c *Set256) Elements64(a []uint64, start uint8, high uint64) int {
-// 	if len(a) == 0 {
-// 		return 0
-// 	}
-// 	i := start >> 6
-// 	total := elements64(b.sets[i], a, start&0x3f, high|(i<<6))
-// 	// TODO: compare perf with unrolling the loop.
-// 	for ; i < 4; i++ {
-// 		total += elements64(b.sets[i], a[total:], 0, high|(i<<6))
-// 	}
-// 	return total
-// }
-
-// func elements64(u uint64, a []uint64, startBit int, high uint64) int {
-// 	i := 0
-// 	// TODO: compare performance with making mask a loop variable.
-// 	for b := startBit; b < 64 && i < len(a); b++ {
-// 		if u & (1 << b) {
-// 			a[i] = high | b
-// 			i++
-// 		}
-// 	}
-// 	return i
-// }
-
-// a 1 in the position indicated by the low 6 bits of n.
-// TODO: confirm this is inlined.
-func onebit(n uint8) uint64 {
-	return 1 << (n & 0x3f)
+func (s *Set256) Elements64(a []uint64, start uint8, high uint64) int {
+	if len(a) == 0 {
+		return 0
+	}
+	si := start / 64
+	n := s.sets[si].Elements64(a, start % 64, uint64(si * 64))
+	for i := si + 1; i < 4; i++ {
+		n += s.sets[i].Elements64(a[n:], 0, uint64(i*64))
+	}
+	return n
 }
+
+func (s Set256) String() string {
+	var a [256]uint64
+	n := s.Elements64(a[:], 0, 0)
+	if n == 0 {
+		return "{}"
+	}
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, "{%d", a[0])
+	for  _, e := range a[1:n] {
+		fmt.Fprintf(&buf, ", %d", e)
+	}
+	fmt.Fprint(&buf, "}")
+	return buf.String()
+}
+	
+
+// For subber, used in node:
+
+func (s *Set256) add(e uint64) { s.Add(uint8(e)) }
+
+func (s *Set256) remove(e uint64)  bool { 
+	s.Remove(uint8(e))
+	return s.Empty()
+}
+
+func (s *Set256) contains(e uint64)  bool {
+	return s.Contains(uint8(e))
+}
+
+func (s *Set256) elements(a []uint64, start, high uint64) int {
+	return s.Elements64(a, uint8(start), high)
+}
+

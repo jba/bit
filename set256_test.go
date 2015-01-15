@@ -5,37 +5,41 @@ import (
 	"testing"
 )
 
-func sampleSet64() Set64 {
-	var s Set64
+func sampleSet256() Set256 {
+	var s Set256
 	s.Add(3)
 	s.Add(63)
 	s.Add(17)
+	s.Add(70)
+	s.Add(200)
+	s.Add(201)
+	s.Add(192)
 	return s
 }
 
-func TestBasics(t *testing.T) {
-	s := sampleSet64()
-	want := "{3, 17, 63}"
+func TestBasics256(t *testing.T) {
+	s := sampleSet256()
+	want := "{3, 17, 63, 70, 192, 200, 201}"
 	got := s.String()
 	if got != want {
 		t.Errorf("s.String() = %q, want %q", got, want)
 	}
-	if !reflect.DeepEqual(naiveElementsUint8(&s), []uint8{3, 17, 63}) {
+	if !reflect.DeepEqual(naiveElementsUint64(&s), []uint64{3, 17, 63, 70, 192, 200, 201}) {
 		t.Errorf("%s: wrong elements", s)
 	}
-	if s.Size() != 3 {
+	if s.Size() != 7 {
 		t.Error("wrong size")
 	}
 	if s.Empty() {
 		t.Error("shouldn't be empty")
 	}
-	var z Set64
+	var z Set256
 	if !z.Empty() {
 		t.Error("should be empty")
 	}
 }
 
-func TestElements(t *testing.T) {
+func TestElements256(t *testing.T) {
 	var a [10]uint8
 	s := sampleSet64()
 	for _, test := range []struct {
@@ -65,7 +69,7 @@ func TestElements(t *testing.T) {
 	}
 }
 
-func TestElements64(t *testing.T) {
+func TestElements64_256(t *testing.T) {
 	var a [10]uint64
 	s := sampleSet64()
 	for _, test := range []struct {
@@ -97,7 +101,7 @@ func TestElements64(t *testing.T) {
 	}
 }
 
-func TestPosition(t *testing.T) {
+func TestPosition256(t *testing.T) {
 	s := sampleSet64()
 	for _, test := range []struct {
 		n   uint8
@@ -123,17 +127,16 @@ func TestPosition(t *testing.T) {
 	}
 }
 
-func naiveElementsUint8(s interface {
+func naiveElementsUint64(s interface {
 	Capacity() int
 	Contains(uint8) bool
-}) []uint8 {
-	var els []uint8
+}) []uint64 {
+	var els []uint64
 	for i := 0; i < s.Capacity(); i++ {
 		u := uint8(i)
 		if s.Contains(u) {
-			els = append(els, u)
+			els = append(els, uint64(u))
 		}
 	}
 	return els
 }
-
