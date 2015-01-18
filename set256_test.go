@@ -24,6 +24,9 @@ func TestBasics256(t *testing.T) {
 	if got != want {
 		t.Errorf("s.String() = %q, want %q", got, want)
 	}
+	if !s.Equal(&s) {
+		t.Fatal("not equal")
+	}
 	if !reflect.DeepEqual(naiveElementsUint64(&s), []uint64{3, 17, 63, 70, 192, 200, 201}) {
 		t.Errorf("%s: wrong elements", s)
 	}
@@ -139,4 +142,26 @@ func naiveElementsUint64(s interface {
 		}
 	}
 	return els
+}
+
+func TestIntersectN(t *testing.T) {
+	var c Set256
+	b1 := sampleSet256()
+	b2 := sampleSet256()
+	c.IntersectN([]*Set256{&b1, &b2})
+	if !c.Equal(&b1) {
+		t.Fatal("not equal")
+	}
+	c.IntersectN([]*Set256{&b1, &b2, &Set256{}})
+	if !c.Empty() {
+		t.Fatal("not empty")
+	}
+	var b3 Set256
+	b3.Add(201)
+	b3.Add(188)
+	b3.Add(254)
+	c.IntersectN([]*Set256{&b1, &b3})
+	if c.Size() != 1 || !c.Contains(201) {
+		t.Fatal("bad c")
+	}
 }

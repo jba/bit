@@ -23,6 +23,7 @@ type subber interface {
 	elements(a []uint64, start, high uint64) int
 	size() int
 	memSize() uint64
+	equalSub(subber) bool
 }
 
 func (n *node) newSubber() subber {
@@ -49,7 +50,6 @@ func (n *node) add(e uint64) {
 		newsub[pos] = subnode{index: index, sub: sub}
 		copy(newsub[pos+1:], n.subnodes[pos:])
 		n.subnodes = newsub
-		//fmt.Printf("node shift %d: grew to %d\n", n.shift, len(n.subnodes))
 	}
 	sub.add(e)
 }
@@ -83,6 +83,23 @@ func (n *node) contains(e uint64) bool {
 	}
 	return n.subnodes[p].sub.contains(e)
 }
+
+func (n1 *node) equal(n2 *node) bool {
+	if !n1.bitset.Equal(&n2.bitset) {
+		return false
+	}
+	for i, sn1 := range n1.subnodes {
+		if !sn1.sub.equalSub(n2.subnodes[i].sub) {
+			return false
+		}
+	}
+	return true
+}
+
+func (n1 *node) equalSub(s subber) bool {
+	return n1.equal(s.(*node))
+}
+
 
 func (n *node) size() int {
 	t := 0
@@ -163,65 +180,66 @@ func (n *node) elements(a []uint64, start, high uint64) int {
 // 	}
 // }
 
-// func intersectNode(nodes []*node) *node {
-// 	var posSet Set256
-// 	var posSets [256]*Set256
-// 	for i, n := range nodes {
-// 		posSets[i] = &n.set
-// 	}
-// 	posSet.Intersect(posSets[:len(nodes)])
-// 	if posSet.Empty() {
-// 		return nil
-// 	}
-// 	// posSet contains the positions of the intersection.
-// 	// At this point we know that there is at least one node,
-// 	// and none of the nodes are empty.
-// 	result := &node{
-// 		shift: nodes[0].shift,
-// 		set: &posSet,
-// 	}
-// 	var positions [256]uint8
-// 	size := posSet.Elements(positions[:], 0)
-// 	if nodes[0].items[0].node != nil {
-// 		for _, pos := range positions[:size] {
-// 			var subnodes [256]*node
-// 			for i, n := range nodes {
-// 				subnodes[i] = n.get(pos).node
-// 				// assert subnodes[i] != nil
-// 			}
-// 			newnode := intersectNode(subnodes[:len(nodes)])
-// 			if newnode != nil {
-// 				result.items = append(result.items, &item{
-// 					pos: pos,
-// 					node: newnode,
-// 				})
-// 			} else {
-// 				// Although all the nodes have an item at this position,
-// 				// the intersection of those items is empty.
-// 				result.set.Remove(pos)
-// 			}
-// 		}
-// 	} else { // set instead of node
-// 		for _, pos := range positions[:size] {
-// 			var subsets [256]*Set256
-// 			for i, n := range nodes {
-// 				subset[i] = n.get(pos).set
-// 				// assert subset[i] != nil
-// 			}
-// 			var bs Set256
-// 			bs.Intersect(subsets[:len(nodes)])
-// 			if !bs.Empty() {
-// 				result.items = append(result.items, &item{
-// 					pos: pos,
-// 					set: &bs,
-// 				})
-// 			} else {
-// 				result.set.Remove(pos)
-// 			}
-// 		}
-// 	}
-// 	if result.set.Empty() {
-// 		return nil
-// 	}
-// 	return result
-// }
+func intersectNodes(nodes []*node) *node {
+	var bsets [256]*Set256
+	for i, n := range nodes {
+		bsets[i] = &n.bitset
+	}
+	var bset Set256
+	bset.IntersectN(bsets[:len(nodes)])
+	if bset.Empty() {
+		return nil
+	}
+	// posSet contains the indices of the intersection.
+	// At this point we know that there is at least one node,
+	// and none of the nodes are empty.
+	result := &node{
+		shift: nodes[0].shift,
+		bitset: bset,
+	}
+	var indices [256]uint8
+	size := bset.Elements(indices[:], 0)
+	var subnodes [256]*node
+	var subsets [256]*Set256
+	isSets := (nodes[0].shift == 8)
+	for _, index := range indices[:size] {
+		for i, n := range nodes {
+			p, found := n.bitset.Position(index)
+			if !found {
+				panic("intersectNodes: index not found")
+			}
+			sub := n.subnodes[p].sub
+			if isSets {
+				subsets[i] = sub.(*Set256)
+			} else {
+				subnodes[i] = sub.(*node)
+			}
+		}
+		var newsub subber
+		if isSets {
+			var bs Set256
+			bs.IntersectN(subsets[:len(nodes)])
+			if !bs.Empty() {
+				newsub = &bs
+			}
+		} else {
+			in := intersectNodes(subnodes[:len(nodes)])
+			if in != nil {
+				newsub = in
+			}
+		}
+		if newsub != nil {
+			result.subnodes = append(result.subnodes,
+				subnode{index: index, sub: newsub})
+		} else {
+			// Although all the nodes have an item at this position,
+			// the intersection of those items is empty.
+			result.bitset.Remove(index)
+		}
+	}
+	if result.bitset.Empty() {
+		return nil
+	}
+	return result
+}
+

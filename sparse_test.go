@@ -136,6 +136,49 @@ func TestSparseElements2(t *testing.T) {
 	}
 }
 
+func set(x ...uint64) []uint64 { return x }
+
+func TestString(t *testing.T) {
+	for _, test := range []struct{
+		els []uint64
+		want string
+	} {
+		{nil, "{}"},
+		{set(9), "{9}"},
+		{set(9, 1e4, 99), "{9, 99, 10000}"},
+	} {
+		got := NewSparseSet(test.els...).String()
+		if got != test.want {
+			t.Errorf("%v: got %q, want %q", test.els, got, test.want)
+		}
+	}
+}
+
+func TestIntersect(t *testing.T) {
+	for _, test := range []struct{
+		els1, els2, want []uint64
+	} {
+		{nil, nil, nil},
+		{set(9), nil, nil},
+		{nil, set(9), nil},
+		{set(9), set(9), set(9)},
+		{set(9), set(9, 10), set(9)},
+		{set(9, 99, 1e8), set(99, 1e8+1), set(99)},
+	} {
+		s1 := NewSparseSet(test.els1...)
+		s2 := NewSparseSet(test.els2...)
+		want := NewSparseSet(test.want...)
+		var got SparseSet
+		got.Intersect(s1, s2)
+		if !got.Equal(want) {
+			t.Errorf("%s & %s = %v, want %v", s1, s2, got, want)
+		}
+	}
+}
+	
+		
+		
+
 // func TestConsecutive(t *testing.T) {
 // 	for _, start := range []uint64{0, 100, 1e8} {
 // 		for _, sz := range []int{0, 1, 2, 3, 4, 5, 64, 256, 512, 1000, 10000, 100000} {

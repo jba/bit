@@ -42,6 +42,13 @@ func (Set256) Capacity() int {
 	return 256
 }
 
+func (s1 *Set256) Equal(s2 *Set256) bool {
+	return s1.sets[0] == s2.sets[0] &&
+		s1.sets[1] == s2.sets[1] &&
+		s1.sets[2] == s2.sets[2] &&
+		s1.sets[3] == s2.sets[3]
+}
+
 // Position returns the 0-based position of n in the set. If
 // the set is {3, 8, 15}, then the position of 8 is 1.
 // If n is not in the set, returns 0, false.
@@ -63,12 +70,12 @@ func (b *Set256) Position(n uint8) (int, bool) {
 }
 
 // c = a intersect b
-func (c *Set256) Intersect2(a, b *Set256) {
-	c.sets[0] = a.sets[0] & b.sets[0]
-	c.sets[1] = a.sets[1] & b.sets[1]
-	c.sets[2] = a.sets[2] & b.sets[2]
-	c.sets[3] = a.sets[3] & b.sets[3]
-}
+// func (c *Set256) Intersect2(a, b *Set256) {
+// 	c.sets[0] = a.sets[0] & b.sets[0]
+// 	c.sets[1] = a.sets[1] & b.sets[1]
+// 	c.sets[2] = a.sets[2] & b.sets[2]
+// 	c.sets[3] = a.sets[3] & b.sets[3]
+// }
 
 // c cannot be one of sets
 func (c *Set256) IntersectN(bs []*Set256) {
@@ -76,7 +83,7 @@ func (c *Set256) IntersectN(bs []*Set256) {
 		c.Clear()
 		return
 	}
-	for i := 0; i < 4; i++ {
+	for i := 0; i < len(c.sets); i++ {
 		c.sets[i] = bs[0].sets[i]
 		for _, s := range bs[1:] {
 			c.sets[i].IntersectWith(s.sets[i])
@@ -152,4 +159,8 @@ func (s *Set256) memSize() uint64 { return memSize(*s) }
 
 func (s *Set256) elements(a []uint64, start, high uint64) int {
 	return s.Elements64(a, uint8(start), high)
+}
+
+func (s *Set256) equalSub(b subber) bool {
+	return s.Equal(b.(*Set256))
 }

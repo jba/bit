@@ -14,7 +14,7 @@ func (s *Set64) Add(u uint8) {
 }
 
 func (s *Set64) Remove(u uint8) {
-	*s &= ^(1 << u)
+	*s &^= (1 << u)
 }
 
 func (s *Set64) Contains(u uint8) bool {
