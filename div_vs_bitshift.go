@@ -8,6 +8,6 @@ func div(u uint8) (uint8, uint8) {
 	return u / 64, u % 64
 }
 
-func bits(u uint8) (uint8, uint8) {
+func bitsx(u uint8) (uint8, uint8) {
 	return u >> 6, u & 0x3f
 }

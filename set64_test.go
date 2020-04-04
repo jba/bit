@@ -3,6 +3,8 @@ package bit
 import (
 	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func sampleSet64() Set64 {
@@ -20,7 +22,7 @@ func TestBasics(t *testing.T) {
 	if got != want {
 		t.Errorf("s.String() = %q, want %q", got, want)
 	}
-	if !reflect.DeepEqual(naiveElementsUint8(&s), []uint8{3, 17, 63}) {
+	if !cmp.Equal(naiveElementsUint8(&s), []uint8{3, 17, 63}) {
 		t.Errorf("%s: wrong elements", s)
 	}
 	if s.Size() != 3 {

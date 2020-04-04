@@ -3,9 +3,11 @@ package bit
 import (
 	"bytes"
 	"fmt"
+	"math/bits"
 )
 
-// A Set64 is an efficient representation of a bitset that can represent [0, 64).
+// Set64 is an efficient representation of a bitset that can represent integers
+// in the range [0, 64).
 // For efficiency, the methods of Set64 perform no bounds checking on their arguments.
 type Set64 uint64
 
@@ -26,7 +28,7 @@ func (s Set64) Empty() bool {
 }
 
 func (s Set64) Size() int {
-	return CountOnes64(uint64(s))
+	return bits.OnesCount64(uint64(s))
 }
 
 func (Set64) Capacity() int {
@@ -45,7 +47,7 @@ func (s *Set64) Clear() {
 func (s Set64) Position(n uint8) (int, bool) {
 	mask := uint64(1 << n)
 	in := (uint64(s)&mask != 0)
-	pos := CountOnes64(uint64(s) & (mask - 1))
+	pos := bits.OnesCount64(uint64(s) & (mask - 1))
 	return pos, in
 }
 
@@ -71,6 +73,7 @@ func (s Set64) Elements(a []uint8, start uint8) int {
 	return i
 }
 
+// TODO: why exported?
 func (s Set64) Elements64(a []uint64, start uint8, high uint64) int {
 	if len(a) == 0 {
 		return 0
@@ -91,6 +94,7 @@ func (s Set64) String() string {
 	if n == 0 {
 		return "{}"
 	}
+	// TODO: use strings.Builder
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "{%d", a[0])
 	for _, e := range a[1:n] {

@@ -10,6 +10,7 @@ import (
 )
 
 func TestSparseBasics(t *testing.T) {
+	// TODO: t.Helper
 	check := func(b bool) {
 		if !b {
 			_, _, line, ok := runtime.Caller(1)
@@ -139,10 +140,10 @@ func TestSparseElements2(t *testing.T) {
 func set(x ...uint64) []uint64 { return x }
 
 func TestString(t *testing.T) {
-	for _, test := range []struct{
-		els []uint64
+	for _, test := range []struct {
+		els  []uint64
 		want string
-	} {
+	}{
 		{nil, "{}"},
 		{set(9), "{9}"},
 		{set(9, 1e4, 99), "{9, 99, 10000}"},
@@ -155,9 +156,9 @@ func TestString(t *testing.T) {
 }
 
 func TestIntersect(t *testing.T) {
-	for _, test := range []struct{
+	for _, test := range []struct {
 		els1, els2, want []uint64
-	} {
+	}{
 		{nil, nil, nil},
 		{set(9), nil, nil},
 		{nil, set(9), nil},
@@ -175,9 +176,6 @@ func TestIntersect(t *testing.T) {
 		}
 	}
 }
-	
-		
-		
 
 // func TestConsecutive(t *testing.T) {
 // 	for _, start := range []uint64{0, 100, 1e8} {

@@ -1,10 +1,10 @@
 package bit
 
 // A node is a compact radix tree element.
-// It behaves like a 256-element array of subnodes, indexed by
-// one byte of the element. In fact, only the non-empty
-// subnodes are represented; the bitset stores this set
-// and subnodes slice contains the non-empty subnodes in order.
+// It behaves like a 256-element array of subnodes, indexed by one byte of the
+// element. In fact, only the non-empty subnodes are represented; the bitset
+// field stores this set and the subnodes field contains the non-empty subnodes
+// in order.
 type node struct {
 	shift    uint // how many bits to shift elements
 	bitset   Set256
@@ -16,6 +16,8 @@ type subnode struct {
 	sub   subber
 }
 
+// subber is the interface satisifed by nodes of the tree.
+// It is implemented by node, for interior nodes, and Set256, for leaves.
 type subber interface {
 	add(uint64)
 	remove(uint64) bool // return true if empty
@@ -99,7 +101,6 @@ func (n1 *node) equal(n2 *node) bool {
 func (n1 *node) equalSub(s subber) bool {
 	return n1.equal(s.(*node))
 }
-
 
 func (n *node) size() int {
 	t := 0
@@ -194,7 +195,7 @@ func intersectNodes(nodes []*node) *node {
 	// At this point we know that there is at least one node,
 	// and none of the nodes are empty.
 	result := &node{
-		shift: nodes[0].shift,
+		shift:  nodes[0].shift,
 		bitset: bset,
 	}
 	var indices [256]uint8
@@ -242,4 +243,3 @@ func intersectNodes(nodes []*node) *node {
 	}
 	return result
 }
-

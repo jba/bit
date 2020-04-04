@@ -5,8 +5,10 @@ import (
 	"fmt"
 )
 
-// A Set256 represents a set of values in the range [0, 256)
-// more efficiently than Set of capacity 256.
+// A Set256 represents a set of integers in the range [0, 256).
+// It does so more efficiently than a Set of capacity 256.
+// For efficiency, the methods of Set256 perform no bounds checking on their
+// arguments.
 type Set256 struct {
 	sets [4]Set64
 }
@@ -131,6 +133,7 @@ func (s Set256) String() string {
 	if n == 0 {
 		return "{}"
 	}
+	// TODO: use strings.Builder
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "{%d", a[0])
 	for _, e := range a[1:n] {

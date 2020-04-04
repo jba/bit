@@ -57,6 +57,7 @@ func (s1 *SparseSet) Equal(s2 *SparseSet) bool {
 	return s1.root.equal(s2.root)
 }
 
+// TODO: copy
 
 func (s *SparseSet) Size() int {
 	if s.root == nil {
@@ -84,6 +85,7 @@ func (s *SparseSet) Elements(a []uint64, start uint64) int {
 	return s.root.elements(a, start, 0)
 }
 
+// TODO: rethink
 // s becomes the intersection of the ss. It must not be
 // one of the ss, and it is not part of the intersection.
 func (s *SparseSet) Intersect(ss ...*SparseSet) {
@@ -112,7 +114,3 @@ func (s SparseSet) String() string {
 	fmt.Fprint(&buf, "}")
 	return buf.String()
 }
-
-
-	
-		

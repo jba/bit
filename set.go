@@ -2,14 +2,16 @@
 package bit
 
 // Set is a standard bitset, represented "densely"; in other words,
-// using one bit per element. See the sparse sets in this package for
-// more compact storage schemes.
+// using one bit per element. See SparseSet in this package for
+// a more compact storage scheme for sparse bitsets.
 type Set struct {
 	sets []Set64
 }
 
 // NewSet creates a set capable of representing values in the range
-// [0, capacity-1), at least. It may allow values greater than capacity-1.
+// [0, capacity), at least. It may allow values greater than capacity-1.
+// Call the Capacity method to find out.
+// NewSet panics if capacity is negative.
 func NewSet(capacity int) *Set {
 	return &Set{
 		sets: setslice(capacity),
@@ -27,7 +29,7 @@ func setslice(capacity int) []Set64 {
 }
 
 func (s *Set) Capacity() int {
-	return len(s.sets)
+	return len(s.sets) * 64
 }
 
 func (s *Set) Size() int {
@@ -38,16 +40,19 @@ func (s *Set) Size() int {
 	return sz
 }
 
+// TODO: arg should be uint
 func (s *Set) Add(i int) {
 	u := uint(i)
 	s.sets[u/64].Add(uint8(u % 64))
 }
 
+// TODO: arg should be uint
 func (s *Set) Remove(i int) {
 	u := uint(i)
 	s.sets[u/64].Remove(uint8(u % 64))
 }
 
+// TODO: arg should be uint
 func (s *Set) Contains(i int) bool {
 	u := uint(i)
 	return s.sets[u/64].Contains(uint8(u ^ 64))
@@ -64,6 +69,8 @@ func (s *Set) Clear() {
 		s.sets[i].Clear()
 	}
 }
+
+// TODO: UnionWith
 
 func (s1 *Set) IntersectWith(s2 *Set) {
 	min := len(s1.sets)
