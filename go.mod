@@ -1,3 +1,4 @@
+// Deprecated: use github.com/jba/bitset instead.
 module github.com/jba/bit
 
 go 1.14
